@@ -55,17 +55,6 @@ npm install axios react-router-dom
 - ✅ AI generation endpoint (Claude API) — summaries, social captions, alt text, hashtags
 - ✅ Human-edit endpoint for AI drafts (with version tracking)
 
-## What's next (assign these to team members)
-| Task | Owner | Notes |
-|---|---|---|
-| File upload (multer → S3/MinIO) | ? | `POST /api/content` currently expects a `file_url` — need actual upload endpoint |
-| Expedition routes + PostGIS map data | ? | CRUD for `expeditions` table |
-| React: Upload form + metadata UI | ? | Talks to `POST /api/content` |
-| React: AI review/edit screen | ? | Talks to `POST /api/ai/generate` + `PATCH /api/ai/:id/edit` |
-| React: Public site (browse/search) | ? | Talks to `GET /api/content` |
-| Expedition map (Leaflet) | ? | Uses expeditions lat/lng |
-| Seed data script | ? | 5-10 fake expeditions/reports for demo |
-| Deployment | ? | Render/Railway for API+DB, Vercel for client |
 
 ## API quick reference
 ```
