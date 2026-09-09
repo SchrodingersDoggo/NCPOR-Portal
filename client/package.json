@@ -1,0 +1,30 @@
+{
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.20.0",
+    "lucide-react": "^1.42.0",
+    "react-globe.gl": "^2.38.0",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.18.3",
+    "recharts": "^3.10.1",
+    "three": "^0.186.0"
+  },
+  "overrides": {
+    "three": "$three"
+  }
+}

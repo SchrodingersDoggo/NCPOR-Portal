@@ -1,0 +1,189 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  comms_officer
+  researcher
+  public
+}
+
+enum Region {
+  Arctic
+  Antarctic
+  Himalaya
+  Southern_Ocean
+  Other
+}
+
+enum ContentType {
+  report
+  dataset
+  publication
+  photo
+  video
+  activity
+}
+
+enum ContentStatus {
+  draft
+  in_review
+  published
+  archived
+}
+
+enum GenerationType {
+  web_summary
+  social_caption_twitter
+  social_caption_instagram
+  alt_text
+  hashtags
+}
+
+enum Platform {
+  twitter
+  instagram
+  linkedin
+  facebook
+}
+
+enum PostStatus {
+  queued
+  posted
+  failed
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         Role     @default(researcher)
+  organization String   @default("NCPOR")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  expeditionsLed  Expedition[]    @relation("PrincipalInvestigator")
+  contentUploaded ContentItem[]   @relation("UploadedBy")
+  contentApproved ContentItem[]   @relation("ApprovedBy")
+  aiReviewed      AiGeneration[]  @relation("ReviewedBy")
+  activities      Activity[]
+
+  @@map("users")
+}
+
+model Expedition {
+  id                    String    @id @default(uuid())
+  name                  String
+  region                Region?
+  description           String?
+  startDate             DateTime? @map("start_date") @db.Date
+  endDate               DateTime? @map("end_date") @db.Date
+  latitude              Decimal?  @db.Decimal(9, 6)
+  longitude             Decimal?  @db.Decimal(9, 6)
+  principalInvestigator String?   @map("principal_investigator")
+  pi                    User?     @relation("PrincipalInvestigator", fields: [principalInvestigator], references: [id])
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  contentItems ContentItem[]
+
+  @@map("expeditions")
+}
+
+model ContentItem {
+  id             String        @id @default(uuid())
+  expeditionId   String?       @map("expedition_id")
+  expedition     Expedition?   @relation(fields: [expeditionId], references: [id])
+  type           ContentType
+  title          String
+  description    String?
+  fileUrl        String        @map("file_url")
+  thumbnailUrl   String?       @map("thumbnail_url")
+  fileSizeBytes  BigInt?       @map("file_size_bytes")
+  mimeType       String?       @map("mime_type")
+  status         ContentStatus @default(draft)
+  uploadedBy     String?       @map("uploaded_by")
+  uploader       User?         @relation("UploadedBy", fields: [uploadedBy], references: [id])
+  approvedBy     String?       @map("approved_by")
+  approver       User?         @relation("ApprovedBy", fields: [approvedBy], references: [id])
+  viewCount      Int           @default(0) @map("view_count")
+  downloadCount  Int           @default(0) @map("download_count")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  tags          ContentTag[]
+  aiGenerations AiGeneration[]
+
+  @@index([status])
+  @@index([expeditionId])
+  @@map("content_items")
+}
+
+model Tag {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  items ContentTag[]
+
+  @@map("tags")
+}
+
+model ContentTag {
+  contentItemId String @map("content_item_id")
+  tagId         Int    @map("tag_id")
+
+  content ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  tag     Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([contentItemId, tagId])
+  @@map("content_tags")
+}
+
+model AiGeneration {
+  id                String         @id @default(uuid())
+  contentItemId     String?        @map("content_item_id")
+  content           ContentItem?   @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  generationType    GenerationType @map("generation_type")
+  aiOutput          String         @map("ai_output")
+  editedOutput      String?        @map("edited_output")
+  isPublished       Boolean        @default(false) @map("is_published")
+  version           Int            @default(1)
+  generatedByModel  String?        @map("generated_by_model")
+  reviewedBy        String?        @map("reviewed_by")
+  reviewer          User?          @relation("ReviewedBy", fields: [reviewedBy], references: [id])
+  createdAt         DateTime       @default(now()) @map("created_at")
+
+  socialPosts SocialPost[]
+
+  @@map("ai_generations")
+}
+
+model Activity {
+  id           String    @id @default(uuid())
+  title        String
+  description  String?
+  activityDate DateTime? @map("activity_date") @db.Date
+  status       String    @default("draft")
+  createdBy    String?   @map("created_by")
+  creator      User?     @relation(fields: [createdBy], references: [id])
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("activities")
+}
+
+model SocialPost {
+  id             String        @id @default(uuid())
+  aiGenerationId String?       @map("ai_generation_id")
+  aiGeneration   AiGeneration? @relation(fields: [aiGenerationId], references: [id])
+  platform       Platform?
+  scheduledFor   DateTime?     @map("scheduled_for")
+  status         PostStatus    @default(queued)
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  @@map("social_posts")
+}
